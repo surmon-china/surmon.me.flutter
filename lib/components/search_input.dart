@@ -388,7 +388,7 @@ class SearchInput extends StatelessWidget {
           ),
           new Expanded(
             child: new MaterialSearchInput(
-              placeholder: '搜索 flutter 组件',
+              placeholder: '搜索文章内容或标题',
               getResults: getResults,
             ),
           ),

@@ -28,11 +28,11 @@ class ListState extends State<CompList> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         new Expanded(
-                          child: new Text("Title",
-
-                              ///data[index]["title"],
-                              style: new TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 16.0)),
+                          child: new Text(
+                            "Title",
+                            style: new TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16.0)
+                            ),
                         )
                       ],
                     ),
@@ -97,3 +97,20 @@ class ListState extends State<CompList> {
   }
 
 }
+
+class AboutPage extends StatefulWidget {
+  @override
+  AboutPageState createState() => new AboutPageState();
+}
+
+class AboutPageState extends State<AboutPage> {
+
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      child: new CompList(),
+    );
+  }
+}
+
+

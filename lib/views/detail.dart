@@ -15,7 +15,7 @@ class Detail extends StatelessWidget {
       body: new Center(
         child: new Text('msg:'+ 'id='+id),
       ),
-    ) ;
+    );
   }
 
 

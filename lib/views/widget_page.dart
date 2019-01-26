@@ -9,11 +9,8 @@ import 'package:surmon/components/cate_card.dart';
 import '../model/cat.dart';
 
 class WidgetPage extends StatefulWidget {
-  final db;
   final CatControlModel catModel;
-  WidgetPage(this.db)
-      : catModel = new CatControlModel(),
-        super();
+  WidgetPage() : catModel = new CatControlModel(), super();
 
   @override
   SecondPageState createState() => new SecondPageState(catModel);

@@ -1,111 +1,192 @@
 import 'package:flutter/material.dart';
+import 'package:fluro/fluro.dart';
+import 'package:flutter/rendering.dart';
 
-void main() => runApp(MyApp());
+import 'views/home.dart';
+import 'views/widget_page.dart';
+import 'views/fourth_page.dart';
+import 'views/collection_page.dart';
 
+import 'routers/routers.dart';
+import 'routers/application.dart';
+import 'common/provider.dart';
+import 'model/widget.dart';
+
+import 'package:surmon/widgets/index.dart';
+import 'package:surmon/components/search_input.dart';
+
+// 全站配色 16进制
+Color themeColor = const Color.fromRGBO(0, 136, 245, 1.0);
+Color bgColor = const Color.fromRGBO(238, 238, 238, 1.0);
+Color textColor = const Color.fromRGBO(85, 85, 85, 1.0);
+
+// 根组件
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+
+  MyApp() {
+    final router = new Router();
+    Routes.configureRoutes(router);
+    Application.router = router;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
+    return new MaterialApp(
+      title: 'Surmon.me',
+      theme: new ThemeData(
+        primaryColor: themeColor,
+        backgroundColor: bgColor,
+        accentColor: textColor,
+        textTheme: TextTheme(
+          // 设置 Material 的默认字体样式
+          body1: TextStyle(color: textColor, fontSize: 16.0),
+        ),
+        iconTheme: IconThemeData(
+          color: themeColor,
+          size: 35.0,
+        ),
       ),
-      home: MyHomePage(title: '这是我的 APP 啦'),
+      home: new MyHomePage(),
+      onGenerateRoute: Application.router.generator,
     );
   }
+}
+
+void main() async {
+  final provider = new Provider();
+  await provider.init(true);
+  // db = Provider.db;
+  runApp(new MyApp());
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  State<StatefulWidget> createState() {
+    return _MyHomePageState();
+  }
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
+  WidgetControlModel widgetControl = new WidgetControlModel();
+  TabController controller;
+  bool isSearch = false;
+  String data = '无';
+  String data2ThirdPage = '这是传给ThirdPage的值';
+  String appBarTitle = tabData[0]['text'];
+  static List tabData = [
+    {'text': '业界动态', 'icon': new Icon(Icons.language)},
+    {'text': 'WIDGET', 'icon': new Icon(Icons.extension)},
+    {'text': '组件收藏', 'icon': new Icon(Icons.star)},
+    {'text': '关于手册', 'icon': new Icon(Icons.favorite)}
+  ];
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+  List<Widget> myTabs = [];
+
+  @override
+  void initState() {
+    super.initState();
+    controller = new TabController(
+        initialIndex: 0, vsync: this, length: 4); // 这里的length 决定有多少个底导 submenus
+    for (int i = 0; i < tabData.length; i++) {
+      myTabs.add(new Tab(text: tabData[i]['text'], icon: tabData[i]['icon']));
+    }
+    controller.addListener(() {
+      if (controller.indexIsChanging) {
+        _onTabChange();
+      }
     });
+    Application.controller = controller;
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  void onWidgetTap(WidgetPoint widgetPoint, BuildContext context) {
+    List widgetDemosList = new WidgetDemoList().getDemos();
+    String targetName = widgetPoint.name;
+    String targetRouter = '/category/error/404';
+    widgetDemosList.forEach((item) {
+      if (item.name == targetName) {
+        targetRouter = item.routerName;
+      }
+    });
+    Application.router.navigateTo(context, "$targetRouter");
+  }
+
+  Widget buildSearchInput(BuildContext context) {
+    return new SearchInput((value) async {
+      if (value != '') {
+        List<WidgetPoint> list = await widgetControl.search(value);
+        return list.map((item) => new MaterialSearchResult<String>(
+          value: item.name,
+          text: item.name,
+          onTap: () {
+            onWidgetTap(item, context);
+          },
+        ))
+            .toList();
+      } else {
+        return null;
+      }
+    }, (value) {}, () {});
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
+    return new Scaffold(
+      appBar: new AppBar(title: buildSearchInput(context)),
+      body: new TabBarView(controller: controller, children: <Widget>[
+        new HomePage(),
+        new WidgetPage(),
+        new CollectionPage(),
+        new FourthPage()
+      ]),
+      bottomNavigationBar: Material(
+        color: const Color(0xFFF0EEEF), //底部导航栏主题颜色
+        child: SafeArea(
+          child: Container(
+            height: 65.0,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0F0F0),
+              // boxShadow: <BoxShadow>[
+              //   BoxShadow(
+              //     color: const Color(0xFFd0d0d0),
+              //     blurRadius: 3.0,
+              //     spreadRadius: 2.0,
+              //     offset: Offset(-1.0, -1.0),
+              //   ),
+              // ],
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
+            child: TabBar(
+              controller: controller,
+              indicatorColor: Theme.of(context).primaryColor, //tab标签的下划线颜色
+              // labelColor: const Color(0xFF000000),
+              indicator: null,
+              // indicatorWeight: 0.1,
+              labelColor: Theme.of(context).primaryColor,
+              unselectedLabelColor: const Color(0xFF8E8E8E),
+              tabs: <Tab>[
+                Tab(text: '首页', icon: Icon(Icons.language)),
+                Tab(text: '组件', icon: Icon(Icons.extension)),
+                Tab(text: '百鸣苑', icon: Icon(Icons.star)),
+                Tab(text: '其他', icon: Icon(Icons.favorite)),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+
+  void _onTabChange() {
+    if (this.mounted) {
+      this.setState(() {
+        print('改变了而');
+        appBarTitle = tabData[controller.index]['text'];
+      });
+    }
   }
 }

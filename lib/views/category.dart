@@ -112,8 +112,9 @@ class _CategoryHome extends State<CategoryHome> {
       decoration: BoxDecoration(
         color: Colors.white,
         image: DecorationImage(
-            image: AssetImage('assets/images/paimaiLogo.png'),
-            alignment: Alignment.bottomRight),
+          image: AssetImage('assets/images/paimaiLogo.png'),
+          alignment: Alignment.bottomRight
+        ),
       ),
       child: wiContaienr,
     );

@@ -6,8 +6,7 @@ class ListViewItem extends StatelessWidget {
   final String itemTitle;
   final String data;
 
-  const ListViewItem({Key key, this.itemUrl, this.itemTitle, this.data})
-      : super(key: key);
+  const ListViewItem({Key key, this.itemUrl, this.itemTitle, this.data}): super(key: key);
 
   void _launchURL(String url, BuildContext context) async {
 
